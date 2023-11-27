@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <button onClick="startAudio();">startAudio</button>
+        <span id="local_id"></span>
+        <input id="remote_id" />
+        <button onClick="connectAndSend();">connect and send</button>
+        <script type="text/javascript">
+const urlParams = new URLSearchParams(window.location.hash.replace("#",""));
+console.log(urlParams.get('local_id')||'unknown_id');
+const localId = urlParams.get('local_id');
+const remoteId = urlParams.get('remote_id')
+console.log(`Initiating with localId ${localId} and remoteId ${remoteId}`)
+
+const peer = new Peer(localId);
+peer.on('open', (id) => {
+    console.log(`listening on ID ${id}`);
+    document.getElementById('local_id').innerText = id;
+})
+peer.on('connection', function(conn) {
+    console.log('inbound connection');
+    conn.on('data', function(data){
+        if(data == 'startAudio') {
+            return startAudio({conn});
+        }
+        console.log(data);
+    });
+});
+
+var localStream; 
+navigator.getUserMedia (
+        // Only request audio
+        {video: false, audio: {autoGainControl:false, noiseSuppression: false, echoCancellation: false}},
+            
+        // Success callback
+        async function success(localAudioStream) {
+            localStream = localAudioStream;
+            console.log(await localStream.getAudioTracks()[0].getCapabilities());
+            await localStream.getAudioTracks()[0].applyConstraints({autoGainControl:false, noiseSuppression: false, echoCancellation: false});
+            console.log(await localStream.getAudioTracks()[0].getSettings());
+        },
+        // Failure callback
+        function error(err) {
+            // handle error
+        }
+    );
+
+peer.on('call', function(incoming) {
+    console.log('incoming call');
+    incoming.answer(localStream);
+    incoming.on('stream', function(stream) {
+        console.log('incoming stream');
+        var audio = $('<audio controls autoplay />').appendTo('body');
+        console.log(stream);
+        // audio[0].src = (URL || webkitURL || mozURL).createObjectURL(stream);
+        audio[0].srcObject = stream;
+    })
+});
+peer.on('error', console.error);
+
+var conn;
+
+function startAudio({conn}) {
+    if(conn) {
+        console.log('got connection',conn);
+        peer.call(conn.peer, localStream);
+    }    
+}
+
+
+function connectAndSend() {
+    console.log('connect and send');
+    conn = peer.connect(document.getElementById('remote_id').value);
+    conn.on('open', function() {
+        console.log('connection opened');
+        conn.send('startAudio');
+    })
+}
+        </script>
+    </body>
+</html>
