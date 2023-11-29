@@ -40,7 +40,8 @@ export const PeerProvider = ({ children }) => {
 
       newPeer.on('call', (incoming) => {
         console.log('incoming call');
-        incoming.answer(window.mediaStream.localAudioStream);
+        // incoming.answer(window.mediaStream.localAudioStream);
+        incoming.answer(window.ms.stream);
       })
 
       newPeer.on('error', (err) => {
