@@ -22,7 +22,7 @@ function Broadcast() {
             //         echoCancellation: false
             //     }
             // }));
-            let ms = await window.MediaStream.getAudioContext();
+            let ms = await window.mediaStream.getAudioContext();
             setAudioSrc(ms.stream);
         }
         getMediaStream();
