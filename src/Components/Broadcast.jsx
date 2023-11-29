@@ -15,13 +15,15 @@ function Broadcast() {
     }
     useEffect(() => {
         let getMediaStream = async () => {
-            setAudioSrc(await window.mediaStream.getMediaStream({
-                audio: {
-                    autoGainControl: false,
-                    noiseSuppression: false,
-                    echoCancellation: false
-                }
-            }));
+            // setAudioSrc(await window.mediaStream.getMediaStream({
+            //     audio: {
+            //         autoGainControl: false,
+            //         noiseSuppression: false,
+            //         echoCancellation: false
+            //     }
+            // }));
+            let ms = await window.MediaStream.getAudioContext();
+            setAudioSrc(ms.stream);
         }
         getMediaStream();
 
